@@ -2,7 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app/app.module';
 import { DataSource } from 'typeorm';
 import { RolePermission } from './permissions/role-permission.entity';
-import { User } from './users/user.entity';
+import { User } from './users/entity/user.entity';
 
 async function seedPermissions() {
   console.log('🔐 Populando permissões do sistema...');

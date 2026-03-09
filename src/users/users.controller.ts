@@ -11,10 +11,47 @@ import {
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { JwtAuthGuard } from '../auth/guards/jwt.guard';
+import { UserSettingsService } from '../users-settings/user-settings.service';
 
 @Controller('api/users')
 export class UsersController {
-  constructor(private usersService: UsersService) {}
+  constructor(
+    private usersService: UsersService,
+    private userSettingsService: UserSettingsService,
+  ) {}
+
+  // GET /api/users  (lista de usuários) - apenas diretor
+  @Get()
+  @UseGuards(JwtAuthGuard)
+  async listAll(@Req() req: any) {
+    if (req.user?.role !== 'diretor') {
+      throw new BadRequestException('Acesso negado');
+    }
+    return await this.usersService.listAll();
+  }
+
+  // POST /api/users  (criar novo usuário) - apenas diretor
+  @Post()
+  @UseGuards(JwtAuthGuard)
+  async createUser(@Body() body: any, @Req() req: any) {
+    if (req.user?.role !== 'diretor') {
+      throw new BadRequestException('Acesso negado');
+    }
+
+    const created = await this.usersService.create(body);
+
+    // Criar userSettings padrão se o serviço estiver disponível
+    try {
+      if (this.userSettingsService) {
+        await this.userSettingsService.create(created.id);
+      }
+    } catch (e) {
+      console.warn('Falha ao criar userSettings automáticas:', e?.message || e);
+    }
+
+    const { password, ...rest } = created as any;
+    return rest;
+  }
 
   // GET /api/users/:id  (retorna usuário sem password)
   @Get(':id')

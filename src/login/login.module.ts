@@ -4,19 +4,25 @@ import { PassportModule } from '@nestjs/passport';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { LoginService } from './login.service';
 import { LoginController } from './login.controller';
-import { User } from '../users/user.entity';
+import { User } from '../users/entity/user.entity';
 import { JwtStrategy } from '../auth/strategies/jwt.strategy';
-import { UserSettingsModule } from '../users/user-settings.module';
-
+import { UserSettingsModule } from '../users-settings/user-settings.module';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 @Module({
   imports: [
     TypeOrmModule.forFeature([User]),
     PassportModule.register({ defaultStrategy: 'jwt' }),
-    JwtModule.register({
-      secret: process.env.JWT_SECRET || 'your-secret-key',
-      signOptions: {
-        expiresIn: '24h',
-      },
+    // DEPOIS
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        secret: configService.get<string>(
+          'JWT_SECRET',
+          'sua-chave-secreta-mude-em-producao',
+        ),
+        signOptions: { expiresIn: '24h' },
+      }),
     }),
     UserSettingsModule,
   ],

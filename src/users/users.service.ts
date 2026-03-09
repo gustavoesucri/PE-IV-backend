@@ -2,7 +2,7 @@ import { Injectable, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
-import { User } from './user.entity';
+import { User } from './entity/user.entity';
 
 @Injectable()
 export class UsersService {
@@ -29,6 +29,38 @@ export class UsersService {
 
     const merged = this.userRepository.merge(user, updateData as any);
     return await this.userRepository.save(merged);
+  }
+
+async create(userData: Partial<User>): Promise<User> {
+  const existingByUsername = await this.userRepository.findOne({ where: { username: userData.username } });
+  if (existingByUsername) {
+    throw new BadRequestException('Nome de usuário já existe');
+  }
+
+  if (userData.email) {
+    const existingByEmail = await this.userRepository.findOne({ where: { email: userData.email } });
+    if (existingByEmail) {
+      throw new BadRequestException('Email já cadastrado');
+    }
+  }
+
+  if (userData.password) {
+    userData.password = await bcrypt.hash(userData.password, 10);
+  } else {
+    userData.password = await bcrypt.hash('changeme', 10);
+  }
+
+  const user: User = this.userRepository.create(userData as User); // ← tipagem explícita
+  const saved: User = await this.userRepository.save(user);        // ← tipagem explícita
+  return saved;
+}
+
+  async listAll(): Promise<Partial<User>[]> {
+    const list = await this.userRepository.find();
+    return list.map((u: any) => {
+      const { password, ...rest } = u;
+      return rest;
+    });
   }
 
   async verifyPassword(id: number, plainPassword: string): Promise<boolean> {

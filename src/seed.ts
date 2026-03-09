@@ -2,8 +2,8 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app/app.module';
 import * as bcrypt from 'bcrypt';
 import { DataSource } from 'typeorm';
-import { User } from './users/user.entity';
-import { UserSettings } from './users/user-settings.entity';
+import { User } from './users/entity/user.entity';
+import { UserSettings } from './users-settings/entity/user-settings.entity';
 
 async function seed() {
   console.log('🌱 Iniciando seed do banco de dados...');
