@@ -13,12 +13,12 @@ import {
 import { UserSettingsService } from './user-settings.service';
 import { JwtAuthGuard } from '../auth/guards/jwt.guard';
 
-@Controller('api/userSettings')
+@Controller('user-settings')
 export class UserSettingsController {
   constructor(private userSettingsService: UserSettingsService) {}
 
   /**
-   * GET /api/userSettings?userId=1
+   * GET /user-settings?userId=1
    * Busca UserSettings por userId
    */
   @Get()
@@ -39,7 +39,7 @@ export class UserSettingsController {
   }
 
   /**
-   * POST /api/userSettings
+   * POST /user-settings
    * Cria novas UserSettings
    * Não requer autenticação - é chamado após login automático
    */
@@ -56,7 +56,7 @@ export class UserSettingsController {
   }
 
   /**
-   * PATCH /api/userSettings/:id
+   * PATCH /user-settings/:id
    * Atualiza UserSettings pelo ID da tabela user_settings
    * Valida se o usuário pode acessar suas próprias configurações
    */
@@ -67,7 +67,7 @@ export class UserSettingsController {
     @Body() updateData: any,
     @Req() req: any,
   ) {
-    console.log('🔐 PATCH /api/userSettings/:id recebido', {
+    console.log('🔐 PATCH /user-settings/:id recebido', {
       settingsId,
       hasReqUser: !!req.user,
       userId: req.user?.id,
@@ -106,7 +106,7 @@ export class UserSettingsController {
   }
 
   /**
-   * PATCH /api/userSettings/:id/widget-positions
+   * PATCH /user-settings/:id/widget-positions
    * Atualiza apenas posições dos widgets usando ID da tabela user_settings
    */
   @Patch(':id/widget-positions')

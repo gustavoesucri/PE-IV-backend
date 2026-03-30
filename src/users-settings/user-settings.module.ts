@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { UserSettings } from './entity/user-settings.entity';
+import { UserSettings } from './entities/user-settings.entity';
 import { UserSettingsService } from './user-settings.service';
 import { UserSettingsController } from './user-settings.controller';
 

@@ -7,7 +7,7 @@ import {
   ManyToOne,
   JoinColumn,
 } from 'typeorm';
-import { User } from '../../users/entity/user.entity';
+import { User } from '../../users/entities/user.entity';
 
 @Entity('user_settings')
 export class UserSettings {
@@ -24,14 +24,14 @@ export class UserSettings {
   @Column({ type: 'jsonb', default: {} })
   widgetPositions: Record<string, any>;
 
-  @Column({ type: 'simple-array', default: '' })
+  @Column({ type: 'jsonb', default: '[]' })
   sidebarOrder: string[];
 
   @Column({ type: 'jsonb', default: '[]' })
   notes: any[];
 
-  @Column({ type: 'simple-array', default: '' })
-  monitoredStudents: string[];
+  @Column({ type: 'jsonb', default: '[]' })
+  monitoredStudents: any[];
 
   @Column({ type: 'jsonb', default: '[]' })
   favoriteCompanies: any[];

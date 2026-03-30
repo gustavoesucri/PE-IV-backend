@@ -2,7 +2,7 @@ import { Injectable, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
-import { User } from './entity/user.entity';
+import { User } from './entities/user.entity';
 
 @Injectable()
 export class UsersService {
@@ -67,6 +67,14 @@ async create(userData: Partial<User>): Promise<User> {
     const user = await this.findById(id);
     if (!user) return false;
     return await bcrypt.compare(plainPassword, user.password);
+  }
+
+  async deleteById(id: number) {
+    const user = await this.findById(id);
+    if (!user) {
+      throw new BadRequestException('Usuário não encontrado');
+    }
+    return await this.userRepository.remove(user);
   }
 }
 

@@ -1,7 +1,7 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { UserSettings } from './entity/user-settings.entity';
+import { UserSettings } from './entities/user-settings.entity';
 
 @Injectable()
 export class UserSettingsService {

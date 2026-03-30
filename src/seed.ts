@@ -2,8 +2,9 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app/app.module';
 import * as bcrypt from 'bcrypt';
 import { DataSource } from 'typeorm';
-import { User } from './users/entity/user.entity';
-import { UserSettings } from './users-settings/entity/user-settings.entity';
+import { User } from './users/entities/user.entity';
+import { UserSettings } from './users-settings/entities/user-settings.entity';
+import { Company } from './companies/entities/company.entity';
 
 async function seed() {
   console.log('🌱 Iniciando seed do banco de dados...');
@@ -33,6 +34,7 @@ async function seed() {
     // Limpa dados existentes usando query builder
     console.log('🗑️ Limpando dados antigos...');
     await dataSource.createQueryBuilder().delete().from(UserSettings).execute().catch(() => null);
+    await dataSource.createQueryBuilder().delete().from(Company).execute().catch(() => null);
     await dataSource.createQueryBuilder().delete().from(User).execute().catch(() => null);
 
     // Cria o usuário Diretor
@@ -107,6 +109,65 @@ async function seed() {
     });
 
     await dataSource.getRepository(UserSettings).save(userSettings);
+
+    // Cria empresas de exemplo
+    console.log('🏢 Criando empresas de exemplo...');
+    const companiesRepo = dataSource.getRepository(Company);
+
+    const companiesData = [
+      {
+        nome: 'Tech Solutions Ltda',
+        cnpj: '12345678000101',
+        rua: 'Rua da Tecnologia',
+        numero: '100',
+        bairro: 'Centro',
+        estado: 'SP',
+        cep: '01001000',
+      },
+      {
+        nome: 'Inovação Digital S.A.',
+        cnpj: '98765432000102',
+        rua: 'Avenida Brasil',
+        numero: '500',
+        bairro: 'Jardim América',
+        estado: 'RJ',
+        cep: '20040020',
+      },
+      {
+        nome: 'Construtora ABC',
+        cnpj: '11222333000103',
+        rua: 'Rua das Obras',
+        numero: '250',
+        bairro: 'Industrial',
+        estado: 'MG',
+        cep: '30130000',
+      },
+      {
+        nome: 'Farmácia Saúde Total',
+        cnpj: '44555666000104',
+        rua: 'Avenida Principal',
+        numero: '75',
+        bairro: 'Vila Nova',
+        estado: 'PR',
+        cep: '80010100',
+      },
+      {
+        nome: 'Supermarket Express',
+        cnpj: '77888999000105',
+        rua: 'Rua do Comércio',
+        numero: '300',
+        bairro: 'Centro',
+        estado: 'SC',
+        cep: '88010001',
+      },
+    ];
+
+    for (const companyData of companiesData) {
+      const company = companiesRepo.create(companyData);
+      await companiesRepo.save(company);
+    }
+
+    console.log(`✅ ${companiesData.length} empresas criadas com sucesso!`);
 
     console.log('✅ Seed completo com sucesso!');
     console.log('');

@@ -4,7 +4,7 @@ import { Repository } from 'typeorm';
 
 import { RolePermission } from '../permissions/role-permission.entity';
 import { UserSpecificPermission } from '../permissions/user-specific-permission.entity';
-import { GlobalNotification } from './entity/director-panel.entity'; 
+import { GlobalNotification } from './entities/director-panel.entity'; 
 import { CreateRolePermissionDto, CreateUserSpecificPermissionDto } from './dto/create-dto.director-panel';
 import { UpdatePermissionsDto, UpdateGlobalNotificationsDto } from './dto/update-dto.director-panel';
 

@@ -5,6 +5,7 @@ import {
   Param,
   Body,
   Post,
+  Delete,
   UseGuards,
   Req,
   BadRequestException,
@@ -13,14 +14,14 @@ import { UsersService } from './users.service';
 import { JwtAuthGuard } from '../auth/guards/jwt.guard';
 import { UserSettingsService } from '../users-settings/user-settings.service';
 
-@Controller('api/users')
+@Controller('users')
 export class UsersController {
   constructor(
     private usersService: UsersService,
     private userSettingsService: UserSettingsService,
   ) {}
 
-  // GET /api/users  (lista de usuários) - apenas diretor
+  // GET /users  (lista de usuários) - apenas diretor
   @Get()
   @UseGuards(JwtAuthGuard)
   async listAll(@Req() req: any) {
@@ -30,7 +31,7 @@ export class UsersController {
     return await this.usersService.listAll();
   }
 
-  // POST /api/users  (criar novo usuário) - apenas diretor
+  // POST /users  (criar novo usuário) - apenas diretor
   @Post()
   @UseGuards(JwtAuthGuard)
   async createUser(@Body() body: any, @Req() req: any) {
@@ -53,7 +54,7 @@ export class UsersController {
     return rest;
   }
 
-  // GET /api/users/:id  (retorna usuário sem password)
+  // GET /users/:id  (retorna usuário sem password)
   @Get(':id')
   @UseGuards(JwtAuthGuard)
   async getById(@Param('id') idParam: string, @Req() req: any) {
@@ -72,7 +73,7 @@ export class UsersController {
     return rest;
   }
 
-  // PATCH /api/users/:id  (atualiza dados do usuário)
+  // PATCH /users/:id  (atualiza dados do usuário)
   @Patch(':id')
   @UseGuards(JwtAuthGuard)
   async update(@Param('id') idParam: string, @Body() body: any, @Req() req: any) {
@@ -94,7 +95,7 @@ export class UsersController {
     return rest;
   }
 
-  // POST /api/users/:id/verify-password
+  // POST /users/:id/verify-password
   @Post(':id/verify-password')
   @UseGuards(JwtAuthGuard)
   async verifyPassword(@Param('id') idParam: string, @Body() body: { password: string }, @Req() req: any) {
@@ -110,6 +111,24 @@ export class UsersController {
     }
 
     return { ok: true };
+  }
+
+  // DELETE /users/:id  (deletar usuário) - apenas diretor
+  @Delete(':id')
+  @UseGuards(JwtAuthGuard)
+  async deleteUser(@Param('id') idParam: string, @Req() req: any) {
+    if (req.user?.role !== 'diretor') {
+      throw new BadRequestException('Acesso negado');
+    }
+
+    const id = parseInt(idParam, 10);
+
+    // Não permitir deletar o próprio usuário
+    if (req.user?.id === id) {
+      throw new BadRequestException('Você não pode deletar seu próprio usuário');
+    }
+
+    return await this.usersService.deleteById(id);
   }
 }
 
