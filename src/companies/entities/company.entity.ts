@@ -26,6 +26,24 @@ export class Company {
   @Column({ type: 'varchar', length: 8, nullable: true })
   cep?: string;
 
+  @Column({ type: 'varchar', length: 255, nullable: true, name: 'nome_fantasia' })
+  nomeFantasia?: string;
+
+  @Column({ type: 'varchar', length: 255, nullable: true, name: 'razao_social' })
+  razaoSocial?: string;
+
+  @Column({ type: 'varchar', length: 20, nullable: true })
+  telefone?: string;
+
+  @Column({ type: 'varchar', length: 100, nullable: true, name: 'contato_rh_nome' })
+  contatoRhNome?: string;
+
+  @Column({ type: 'varchar', length: 100, nullable: true, name: 'contato_rh_email' })
+  contatoRhEmail?: string;
+
+  @Column({ type: 'boolean', default: true })
+  ativo: boolean;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 

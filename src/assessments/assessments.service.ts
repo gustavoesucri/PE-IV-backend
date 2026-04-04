@@ -2,6 +2,7 @@ import { Injectable, NotFoundException, ConflictException } from '@nestjs/common
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Assessment } from './entities/assessment.entity';
+import { AssessmentQuestion } from './entities/assessment-question.entity';
 import { CreateAssessmentDto } from './dto/create-assessment.dto';
 import { UpdateAssessmentDto } from './dto/update-assessment.dto';
 
@@ -10,7 +11,15 @@ export class AssessmentsService {
   constructor(
     @InjectRepository(Assessment)
     private assessmentsRepository: Repository<Assessment>,
+    @InjectRepository(AssessmentQuestion)
+    private questionsRepository: Repository<AssessmentQuestion>,
   ) {}
+
+  async findAllQuestions(): Promise<AssessmentQuestion[]> {
+    return await this.questionsRepository.find({
+      order: { displayOrder: 'ASC' },
+    });
+  }
 
   async create(createAssessmentDto: CreateAssessmentDto): Promise<Assessment> {
     // Verificar se já existe avaliação do mesmo tipo para o estudante

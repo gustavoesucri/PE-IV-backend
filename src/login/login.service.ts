@@ -1,8 +1,9 @@
 import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, MoreThan } from 'typeorm';
 import * as bcrypt from 'bcrypt';
+import * as crypto from 'crypto';
 import { User } from '../users/entities/user.entity';
 import { LoginDto, CreateUserDto, UserResponseDto } from '../auth/dto/auth.dto';
 import { UserSettingsService } from '../users-settings/user-settings.service';
@@ -131,5 +132,46 @@ export class LoginService {
   async getAllUsers(): Promise<UserResponseDto[]> {
     const users = await this.userRepository.find();
     return users.map(user => this.toUserResponseDto(user));
+  }
+
+  async forgotPassword(email: string): Promise<{ message: string }> {
+    const user = await this.userRepository.findOne({ where: { email } });
+    // Always return success to avoid email enumeration
+    if (!user) {
+      return { message: 'Se o email existir, um token de recuperação foi gerado.' };
+    }
+
+    const token = crypto.randomBytes(32).toString('hex');
+    const expiration = new Date();
+    expiration.setHours(expiration.getHours() + 1); // Token valid for 1 hour
+
+    user.tokenRecuperacao = token;
+    user.validadeToken = expiration;
+    await this.userRepository.save(user);
+
+    // In production, send email with token. For now, log it.
+    console.log(`🔑 Token de recuperação para ${email}: ${token}`);
+
+    return { message: 'Se o email existir, um token de recuperação foi gerado.', };
+  }
+
+  async resetPassword(token: string, newPassword: string): Promise<{ message: string }> {
+    const user = await this.userRepository.findOne({
+      where: {
+        tokenRecuperacao: token,
+        validadeToken: MoreThan(new Date()),
+      },
+    });
+
+    if (!user) {
+      throw new BadRequestException('Token inválido ou expirado');
+    }
+
+    user.password = await bcrypt.hash(newPassword, 10);
+    user.tokenRecuperacao = null as any;
+    user.validadeToken = null as any;
+    await this.userRepository.save(user);
+
+    return { message: 'Senha alterada com sucesso' };
   }
 }

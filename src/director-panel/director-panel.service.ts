@@ -64,15 +64,20 @@ export class DirectorPanelService {
 
   // ================= GLOBAL NOTIFICATIONS =================
   async getGlobalNotifications() {
-    let config = await this.globalNotifRepo.findOne({ where: { id: 1 } });
-    if (!config) {
-      config = this.globalNotifRepo.create({
-        id: 1,
-        notifications: { new_student: true, new_evaluation: true, new_observation: true, user_created: true }
-      });
-      await this.globalNotifRepo.save(config);
+    try {
+      let config = await this.globalNotifRepo.findOne({ where: { id: 1 } });
+      if (!config) {
+        config = this.globalNotifRepo.create({
+          id: 1,
+          notifications: { new_student: true, new_evaluation: true, new_observation: true, user_created: true }
+        });
+        await this.globalNotifRepo.save(config);
+      }
+      return [config];
+    } catch (error) {
+      // Se a tabela não existir ainda, retorna padrão
+      return [{ id: 1, notifications: { new_student: true, new_evaluation: true, new_observation: true, user_created: true } }];
     }
-    return [config]; 
   }
 
   async updateGlobalNotifications(id: number, dto: UpdateGlobalNotificationsDto) {

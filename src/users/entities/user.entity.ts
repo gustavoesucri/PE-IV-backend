@@ -17,9 +17,15 @@ export class User {
   @Column({ type: 'varchar', length: 50, default: 'user' })
   role: string; // diretor, professor, psicologo, cadastrador de empresas
 
-  @CreateDateColumn()
+  @Column({ type: 'varchar', length: 255, nullable: true, name: 'token_recuperacao' })
+  tokenRecuperacao: string;
+
+  @Column({ type: 'timestamp', nullable: true, name: 'validade_token' })
+  validadeToken: Date;
+
+  @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
 }

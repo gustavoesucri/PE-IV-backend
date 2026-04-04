@@ -9,6 +9,7 @@ import {
 } from 'typeorm';
 import { Student } from '../../students/entities/student.entity';
 import { Company } from '../../companies/entities/company.entity';
+import { User } from '../../users/entities/user.entity';
 
 @Entity('placements')
 export class Placement {
@@ -41,11 +42,24 @@ export class Placement {
   @Column({ type: 'date', name: 'data_desligamento' })
   dataDesligamento: string;
 
+  @Column({ type: 'date', nullable: true, name: 'data_provavel_desligamento' })
+  dataProvavelDesligamento: string;
+
+  @Column({ type: 'text', nullable: true, name: 'justificativa_desligamento' })
+  justificativaDesligamento: string;
+
+  @Column({ type: 'text', nullable: true })
+  observacoes: string;
+
   @Column({ type: 'varchar', length: 50, default: 'Ativo' })
   status: string;
 
   @Column({ type: 'int', nullable: true, name: 'created_by' })
   createdBy: number;
+
+  @ManyToOne(() => User, { nullable: true })
+  @JoinColumn({ name: 'created_by' })
+  creator: User;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

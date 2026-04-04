@@ -8,6 +8,7 @@ import {
   JoinColumn,
 } from 'typeorm';
 import { Student } from '../../students/entities/student.entity';
+import { User } from '../../users/entities/user.entity';
 
 @Entity('controls')
 export class Control {
@@ -38,6 +39,10 @@ export class Control {
 
   @Column({ type: 'int', nullable: true, name: 'created_by' })
   createdBy: number;
+
+  @ManyToOne(() => User, { nullable: true })
+  @JoinColumn({ name: 'created_by' })
+  creator: User;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
