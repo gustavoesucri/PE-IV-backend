@@ -42,9 +42,9 @@ export class UserSettings {
   @Column({ type: 'jsonb', default: '{}' })
   settings: Record<string, any>;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
 }
