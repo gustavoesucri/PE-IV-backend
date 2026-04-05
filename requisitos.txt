@@ -1,0 +1,24 @@
+students.service.ts:
+
+    - Trazer mensagem amigável na API, principalmente no DELETE, que hoje não traz nada (por exemplo: Estudante X removido com sucesso!), o body está retornando vazio no DELETE. (Andei pesquisando e parece ser o padrão REST das respostas)
+
+    - O conflito 409 "Nome de estudante já cadastrado" não deve existir, pois no mundo existem homônimos. O CPF resolverá este conflito.
+    - Permite salvar nomes com mais de uma letra capital. Exemplos: "Maria da SIlva" ou "MAria da Silva". Dúvida sobre necessidade de normalizar isso via backend.
+    
+    - "Cidade" e "Complemento" ausentes da Entity da API e ausentes no front-end.
+
+assesments:
+
+    - O front-end parece estar requisitando a listagem inteira de alunos e suas avaliações. Pode ser mais interessante trazer as avaliações somente ao clicar no respectivo aluno. Ou trazer via paginação. No momento, isso não parece sofrer com problemas de desempenho. Mas sim, é melhor fazer que ao clicar no aluno traga as avaliações dele atualizadas.
+
+assesments.service.ts:
+
+    - Colocar a lógica de validação no back-end. No momento a API aceita sem validar perguntas abertas de resposta obrigatória.
+
+----------------------------------------
+
+    - CNPJ que veio do seed é inválido. O cadastro está no banco, mas a edição acusa invalidez.
+
+    - Trazer lógica de regras de neǵocio do front-end para o backend, caso ainda tenha alguma a trazer.
+
+    - Dando erro 500 ao tentar POST para encaminhamentos.
