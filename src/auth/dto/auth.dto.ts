@@ -2,12 +2,12 @@ import { IsString, IsEmail, MinLength, IsNotEmpty, IsOptional } from 'class-vali
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class LoginDto {
-  @ApiProperty({ example: 'diretor1', description: 'Nome de usuário cadastrado' })
+  @ApiProperty({ example: 'Diretor', description: 'Nome de usuário cadastrado' })
   @IsString()
   @IsNotEmpty()
   username: string;
 
-  @ApiProperty({ example: '123', description: 'Senha do usuário (mínimo 3 caracteres)' })
+  @ApiProperty({ example: 'admin', description: 'Senha do usuário (mínimo 3 caracteres)' })
   @IsString()
   @IsNotEmpty()
   @MinLength(3)
