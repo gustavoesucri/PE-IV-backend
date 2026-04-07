@@ -1,3 +1,4 @@
+// seed.ts - VERSÃO COM READLINE (SEM DEPENDÊNCIAS EXTERNAS)
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app/app.module';
 import * as bcrypt from 'bcrypt';
@@ -7,19 +8,67 @@ import { UserSettings } from './users-settings/entities/user-settings.entity';
 import { Company } from './companies/entities/company.entity';
 import { RolePermission } from './permissions/role-permission.entity';
 import { AssessmentQuestion } from './assessments/entities/assessment-question.entity';
+import { Student } from './students/entities/student.entity';
+import { Assessment } from './assessments/entities/assessment.entity';
+import { Placement } from './placements/entities/placement.entity';
+import * as readline from 'readline';
 
-// ── Dados ──────────────────────────────────────────────────────────────
+// ====================== FUNÇÕES AUXILIARES PARA BULK ======================
+function calcularDigitos(cnpjBase: string): string {
+  const calc = (base: string, pesos: number[]) => {
+    const soma = base.split('').reduce((acc, num, i) => acc + Number(num) * pesos[i], 0);
+    const resto = soma % 11;
+    return resto < 2 ? 0 : 11 - resto;
+  };
+  const pesos1 = [5,4,3,2,9,8,7,6,5,4,3,2];
+  const pesos2 = [6, ...pesos1];
+  const d1 = calc(cnpjBase, pesos1);
+  const d2 = calc(cnpjBase + d1, pesos2);
+  return `${d1}${d2}`;
+}
 
+function gerarCNPJ(index: number): string {
+  const raiz = "12345678";
+  const filial = String(1000 + index).padStart(4, "0");
+  const base = raiz + filial;
+  return base + calcularDigitos(base);
+}
+
+function criarPayloadAssessment(studentId: number, tipo: string, registeredBy: number) {
+  return {
+    studentId,
+    entryDate: "2025-02-01",
+    assessmentDate: "2025-06-15",
+    evaluationType: tipo,
+    professorName: "Prof. João Silva",
+    q1: "sim", q2: "sim", q3: "nao", q4: "maioria",
+    q5: "sim", q6: "nao", q7: "maioria", q8: "sim",
+    q9: "nao", q10: "raras", q11: "raras", q12: "nao",
+    q13: "raras", q14: "sim", q15: "sim", q16: "sim",
+    q17: "nao", q18: "raras", q19: "sim", q20: "sim",
+    q21: "sim", q22: "nao", q23: "sim", q24: "nao",
+    q25: "sim", q26: "sim", q27: "nao", q28: "nao",
+    q29: "sim", q30: "sim", q31: "sim", q32: "sim",
+    q33: "sim", q34: "sim", q35: "sim", q36: "nao",
+    q37: "sim", q38: "nao", q39: "sim", q40: "sim",
+    q41: "raras", q42: "nao", q43: "sim", q44: "sim",
+    q45: "sim", q46: "sim",
+    openQ1: "Sim, o aluno demonstra perfil adequado para a instituição.",
+    openQ2: "Quando contrariado por colegas.",
+    openQ3: "Faz uso de Ritalina.",
+    registeredBy
+  };
+}
+
+// ====================== SEED BÁSICO (ORIGINAL) ======================
 async function seedData(dataSource: DataSource) {
   console.log('\n── 1/3  Dados base ──────────────────────────────────');
 
-  // Limpa dados existentes
   console.log('🗑️ Limpando dados antigos...');
   await dataSource.createQueryBuilder().delete().from(UserSettings).execute().catch(() => null);
   await dataSource.createQueryBuilder().delete().from(Company).execute().catch(() => null);
   await dataSource.createQueryBuilder().delete().from(User).execute().catch(() => null);
 
-  // Cria o usuário Diretor
   console.log('👤 Criando usuário Diretor...');
   const hashedPassword = await bcrypt.hash('admin', 10);
 
@@ -32,7 +81,6 @@ async function seedData(dataSource: DataSource) {
 
   const savedUser = await dataSource.getRepository(User).save(directorUser);
 
-  // Configurações padrão de widgets
   const defaultWidgetPositions = {
     studentsWidget: { x: 59, y: 63, width: 600, height: 300 },
     companiesWidget: { x: 849, y: 64, width: 593, height: 300 },
@@ -47,7 +95,6 @@ async function seedData(dataSource: DataSource) {
 
   const defaultSettings = { notifySystem: false, notifyEmail: false };
 
-  // Cria UserSettings para o Diretor
   console.log('⚙️ Criando configurações padrão para Diretor...');
   const userSettings = dataSource.getRepository(UserSettings).create({
     userId: savedUser.id,
@@ -62,7 +109,6 @@ async function seedData(dataSource: DataSource) {
 
   await dataSource.getRepository(UserSettings).save(userSettings);
 
-  // Cria empresas de exemplo
   console.log('🏢 Criando empresas de exemplo...');
   const companiesRepo = dataSource.getRepository(Company);
 
@@ -81,9 +127,9 @@ async function seedData(dataSource: DataSource) {
 
   console.log(`✅ ${companiesData.length} empresas criadas`);
   console.log('✅ Usuário Diretor criado (senha: admin)');
+  
+  return savedUser.id;
 }
-
-// ── Permissões ─────────────────────────────────────────────────────────
 
 async function seedPermissions(dataSource: DataSource) {
   console.log('\n── 2/3  Permissões ─────────────────────────────────');
@@ -137,8 +183,6 @@ async function seedPermissions(dataSource: DataSource) {
 
   console.log('✅ 4 papéis com permissões criados');
 }
-
-// ── Questões da Avaliação ──────────────────────────────────────────────
 
 async function seedAssessmentQuestions(dataSource: DataSource) {
   console.log('\n── 3/4  Questões da avaliação ───────────────────────');
@@ -200,7 +244,6 @@ async function seedAssessmentQuestions(dataSource: DataSource) {
     { code: 'q44', displayOrder: 44, type: 'multiple_choice', options: opcoes, text: 'Você percebe incentivo quanto a busca de autonomia para o usuário por parte da família.' },
     { code: 'q45', displayOrder: 45, type: 'multiple_choice', options: opcoes, text: 'Você percebe incentivo quanto a inserção do usuário no mercado de trabalho por parte da família.' },
     { code: 'q46', displayOrder: 46, type: 'multiple_choice', options: opcoes, text: 'Traz os documentos enviados pela Instituição assinado.' },
-    // Questões abertas
     { code: 'openQ1', displayOrder: 47, type: 'text', options: null, text: 'Em sua opinião o usuário tem perfil para esta instituição? Por quê?', conditionalField: null, conditionalNotValue: null },
     { code: 'openQ2', displayOrder: 48, type: 'text', options: null, text: 'Em que situações demonstra irritações?', conditionalField: 'q12', conditionalNotValue: 'nao' },
     { code: 'openQ3', displayOrder: 49, type: 'text', options: null, text: 'Caso o aluno faça uso de medicação. Observações:', conditionalField: 'q27,q28', conditionalNotValue: 'nao' },
@@ -214,16 +257,153 @@ async function seedAssessmentQuestions(dataSource: DataSource) {
   console.log(`✅ ${questoes.length} questões de avaliação cadastradas`);
 }
 
-// ── Entry point ────────────────────────────────────────────────────────
+// ====================== FUNÇÕES DE BULK (100 REGISTROS) ======================
+async function seedBulkCompanies(dataSource: DataSource) {
+  console.log('\n🏢 Criando +100 Empresas extras...');
+  const repo = dataSource.getRepository(Company);
+  const entities = [];
 
+  for (let i = 1; i <= 100; i++) {
+    const company = repo.create({
+      nome: `Tech Solutions Ltda${i}`,
+      cnpj: gerarCNPJ(i),
+      rua: "Rua das Indústrias",
+      numero: "500",
+      bairro: "Centro",
+      estado: "SP",
+      cep: "01001000",
+      nomeFantasia: `TechSol${i}`,
+      razaoSocial: `Tech Solutions Ltda ME ${i}`,
+      telefone: "1133445566",
+      contatoRhNome: "Carolina Mendes",
+      contatoRhEmail: `rh${i}@techsol.com.br`,
+      ativo: true
+    });
+    entities.push(company);
+  }
+
+  await repo.save(entities);
+  console.log('✅ +100 Empresas extras criadas!');
+}
+
+async function seedBulkStudents(dataSource: DataSource) {
+  console.log('\n👨‍🎓 Criando +100 Alunos...');
+  const repo = dataSource.getRepository(Student);
+  const entities = [];
+  let cpfBase = 45672328910;
+
+  for (let i = 1; i <= 100; i++) {
+    const student = repo.create({
+      nome: `Maria Silva Cardoso${i}`,
+      cpf: String(cpfBase + i),
+      dataNascimento: "2005-03-15",
+      dataIngresso: "2025-02-01",
+      dataDesligamento: "2025-12-31",
+      status: "Ativo",
+      observacaoBreve: "Aluno dedicado",
+      observacaoDetalhada: "Mostra interesse em programação...",
+      telefone: "11999887766",
+      email: `maria2${i}@example.com`,
+      endereco: "Rua das Flores, 123",
+      nomeResponsavel: "Ana Silva",
+      telefoneResponsavel: "11988776655",
+      usaMedicamento: false,
+      infoMedicamentos: "Ritalina 10mg",
+      acompanhamento: { av1: false, av2: false, entrevista1: false, entrevista2: false, resultado: "Pendente" }
+    });
+    entities.push(student);
+  }
+
+  await repo.save(entities);
+  console.log('✅ +100 Alunos criados!');
+}
+
+async function seedBulkAssessments(dataSource: DataSource, userId: number) {
+  console.log('\n📝 Criando Avaliações...');
+  const repo = dataSource.getRepository(Assessment);
+  const students = await dataSource.getRepository(Student).find({ take: 100, order: { id: 'ASC' } });
+
+  let count = 0;
+  for (const student of students) {
+    const requests = [];
+    if (student.id % 3 === 0) {
+      requests.push(criarPayloadAssessment(student.id, "primeira", userId));
+      requests.push(criarPayloadAssessment(student.id, "segunda", userId));
+    } else {
+      const tipo = student.id % 2 === 0 ? "segunda" : "primeira";
+      requests.push(criarPayloadAssessment(student.id, tipo, userId));
+    }
+
+    for (const payload of requests) {
+      count++;
+      const assessment = repo.create(payload);
+      await repo.save(assessment);
+    }
+  }
+  console.log(`✅ ${count} Avaliações criadas!`);
+}
+
+async function seedBulkPlacements(dataSource: DataSource, userId: number) {
+  console.log('\n💼 Criando Encaminhamentos...');
+  const placementRepo = dataSource.getRepository(Placement);
+  const companies = await dataSource.getRepository(Company).find({ select: ['id'] });
+  const students = await dataSource.getRepository(Student).find({ take: 100, order: { id: 'ASC' }, select: ['id'] });
+
+  if (students.length === 0 || companies.length === 0) {
+    console.log('⚠️ Sem alunos ou empresas suficientes para criar encaminhamentos');
+    return;
+  }
+
+  for (let i = 0; i < 100; i++) {
+    const payload = {
+      studentId: students[i % students.length].id,
+      empresaId: companies[i % companies.length].id,
+      dataAdmissao: "2025-03-01",
+      funcao: `Auxiliar Administrativo ${i + 1}`,
+      contatoRh: `Carolina - rh${i + 1}@empresa.com`,
+      dataDesligamento: "2025-12-31",
+      dataProvavelDesligamento: "2025-11-30",
+      observacoes: `Bom desempenho ${i + 1}`,
+      status: "Ativo",
+      createdBy: userId
+    };
+
+    const placement = placementRepo.create(payload);
+    await placementRepo.save(placement);
+  }
+  console.log('✅ +100 Encaminhamentos criados!');
+}
+
+// ====================== FUNÇÃO PARA PERGUNTAR NO TERMINAL ======================
+function perguntarOpcao(): Promise<number> {
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+  });
+
+  return new Promise((resolve) => {
+    console.log('\n📋 Escolha uma opção:\n');
+    console.log('  1 → Seed Básico (usuário, 5 empresas, permissões, questões)');
+    console.log('  2 → Seed Completo (Básico + 100 alunos, empresas, avaliações, encaminhamentos)\n');
+    
+    rl.question('Digite 1 ou 2: ', (answer) => {
+      rl.close();
+      const opcao = parseInt(answer);
+      resolve(opcao === 2 ? 2 : 1);
+    });
+  });
+}
+
+// ====================== FUNÇÃO PRINCIPAL ======================
 async function seed() {
-  console.log('🌱 Iniciando seed completo do banco de dados...');
+  console.clear();
+  console.log('🌱 === SEED INTERATIVO PE-IV ===\n');
 
   let app: any;
   let dataSource: DataSource;
 
   try {
-    app = await NestFactory.create(AppModule);
+    app = await NestFactory.create(AppModule, { logger: false });
     dataSource = app.get(DataSource);
 
     if (!dataSource.isInitialized) {
@@ -234,21 +414,35 @@ async function seed() {
     console.log('📋 Sincronizando tabelas...');
     await dataSource.synchronize();
 
-    await seedData(dataSource);
-    await seedPermissions(dataSource);
-    await seedAssessmentQuestions(dataSource);
+    // Pergunta a opção usando readline
+    const opcao = await perguntarOpcao();
+
+    if (opcao === 1) {
+      await seedData(dataSource);
+      await seedPermissions(dataSource);
+      await seedAssessmentQuestions(dataSource);
+    } else {
+      // Pega o ID do usuário criado
+      const userId = await seedData(dataSource);
+      await seedPermissions(dataSource);
+      await seedAssessmentQuestions(dataSource);
+      await seedBulkCompanies(dataSource);
+      await seedBulkStudents(dataSource);
+      await seedBulkAssessments(dataSource, userId);
+      await seedBulkPlacements(dataSource, userId);
+    }
 
     console.log('\n── 4/4  Resumo ─────────────────────────────────────');
     console.log('📋 Usuário: Diretor | Senha: admin | Role: diretor');
-    console.log('🏢 5 empresas de exemplo');
+    console.log('🏢 5 empresas de exemplo + 100 extras (se completo)');
     console.log('🔑 4 papéis com permissões');
     console.log('📝 49 questões de avaliação');
-    console.log('🎉 Seed completo com sucesso!\n');
+    console.log('🎉 Seed finalizado com sucesso!\n');
+    
   } catch (error) {
     console.error('❌ Erro ao fazer seed:');
     if (error instanceof Error) {
       console.error('Message:', error.message);
-      console.error('Stack:', error.stack);
     } else {
       console.error(error);
     }
@@ -261,7 +455,4 @@ async function seed() {
   }
 }
 
-seed().catch((error) => {
-  console.error('Erro fatal no seed:', error);
-  process.exit(1);
-});
+seed();
