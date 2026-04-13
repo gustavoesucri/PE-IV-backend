@@ -16,9 +16,34 @@ assesments.service.ts:
     - Colocar a lógica de validação no back-end. No momento a API aceita sem validar perguntas abertas de resposta obrigatória.
 
 ----------------------------------------
+GERAL:
 
     - CNPJ que veio do seed é inválido. O cadastro está no banco, mas a edição acusa invalidez.
 
     - Trazer lógica de regras de neǵocio do front-end para o backend, caso ainda tenha alguma a trazer.
 
     - Dando erro 500 ao tentar POST para encaminhamentos.
+
+    - Quando clicar em EDITAR/PATCH/PUT, idealmente, deve fazer uma nova busca no back-end somente daquele registro, que nada mais é que um getById(). Isso serve para todas as rotas que permitem edição.
+    
+----------------------------------------
+companies:
+
+    -A rota "/api/empresas?q=nome" não precisa ser colocada, porque o front-end já faz a busca a partir dos dados trazidos via getAll(). A menos que a API vá servir também somente via backend, para outras integrações futuras. Aí, nesse caso, seria interessante deixar a rota pronta, mesmo que não utilizada no front-end.
+
+----------------------------------------
+placements:
+
+    - Não há acesso ao PATCH via front-end, somente  Visualizar dados.
+    - Filtro tem que ter um trim.
+    - Filtro deve funcionar com Enter.
+    - Estudante não pode ser encaminhado em data conflitante a um encaminhamento ativo dele, independentemente de ser a mesma empresa ou não. 
+    - Testar se a regra "Este estudante já possui um encaminhamento ativo para esta empresa." libera cadastro se o cadastro estiver inativo (passou o tempo de desligamento.)
+    - Quando chegar a data do provável desligamento, ao invés de desligar a pessoa no cadastro, enviar ao gestor do encaminhamento uma notificação solicitando confirmação do desligamento ou nova data para desligamento.
+    - As rotas:
+        /api/encaminhamentos?status=ativo GET Apenas ativos
+        /api/encaminhamentos?pessoa_id=1 GET Histórico do aluno
+        /api/encaminhamentos?empresa_id=1 GET Por empresa
+
+        seguem o mesmo princípio da outra mencionada em companies. Porém, ainda falta o filtro para Ativos. E a parte do histórico do aluno está no Visualizar, que deverá ser o Editar.
+    - Criar um filtro para listar Ativos, Inativos, Todos.
