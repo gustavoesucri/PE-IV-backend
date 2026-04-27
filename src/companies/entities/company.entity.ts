@@ -20,6 +20,12 @@ export class Company {
   @Column({ type: 'varchar', length: 100, nullable: true })
   bairro?: string;
 
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  cidade?: string;
+
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  complemento?: string;
+
   @Column({ type: 'varchar', length: 2, nullable: true })
   estado?: string;
 

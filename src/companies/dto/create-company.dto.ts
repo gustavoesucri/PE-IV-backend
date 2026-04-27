@@ -28,6 +28,16 @@ export class CreateCompanyDto {
   @IsOptional()
   bairro?: string;
 
+  @ApiPropertyOptional({ example: 'São Paulo' })
+  @IsString()
+  @IsOptional()
+  cidade?: string;
+
+  @ApiPropertyOptional({ example: 'Apto 101, Bloco A' })
+  @IsString()
+  @IsOptional()
+  complemento?: string;
+
   @ApiPropertyOptional({ example: 'SP', description: '2 letras maiúsculas (UF)' })
   @IsString()
   @IsOptional()
