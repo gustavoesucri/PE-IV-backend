@@ -1,11 +1,11 @@
 import {
   Controller,
   Get,
-  Patch,
   Param,
   Body,
   Post,
   Delete,
+  Patch,
   UseGuards,
   Req,
   BadRequestException,
@@ -14,6 +14,7 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiBody } 
 import { UsersService } from './users.service';
 import { JwtAuthGuard } from '../auth/guards/jwt.guard';
 import { UserSettingsService } from '../users-settings/user-settings.service';
+import { EmailService } from '../email/email.service';
 
 @ApiTags('👤 Usuários')
 @ApiBearerAuth('JWT')
@@ -22,6 +23,7 @@ export class UsersController {
   constructor(
     private usersService: UsersService,
     private userSettingsService: UserSettingsService,
+    private emailService: EmailService,
   ) {}
 
   @Get()
@@ -38,7 +40,7 @@ export class UsersController {
 
   @Post()
   @UseGuards(JwtAuthGuard)
-  @ApiOperation({ summary: 'Criar novo usuário', description: 'Cria um novo usuário e suas configurações padrão. **Apenas diretor.**' })
+  @ApiOperation({ summary: 'Criar novo usuário', description: 'Cria um novo usuário e suas configurações padrão. Envia email de boas-vindas. **Apenas diretor.**' })
   @ApiBody({
     schema: {
       type: 'object',
@@ -46,17 +48,20 @@ export class UsersController {
       properties: {
         username: { type: 'string', example: 'novo_professor' },
         email: { type: 'string', example: 'professor@escola.com' },
-        password: { type: 'string', example: '123456' },
+        password: { type: 'string', example: 'SenhaTemp123!' },
         role: { type: 'string', example: 'professor', enum: ['diretor', 'professor', 'psicologo', 'cadastrador de empresas'] },
       },
     },
   })
-  @ApiResponse({ status: 201, description: 'Usuário criado com sucesso' })
+  @ApiResponse({ status: 201, description: 'Usuário criado com sucesso. Email de boas-vindas enviado.' })
   @ApiResponse({ status: 400, description: 'Acesso negado ou dados inválidos' })
   async createUser(@Body() body: any, @Req() req: any) {
     if (req.user?.role !== 'diretor') {
       throw new BadRequestException('Acesso negado');
     }
+
+    const tempPassword = body.password || 'SenhaTemp123!';
+    body.password = tempPassword;
 
     const created = await this.usersService.create(body);
 
@@ -68,8 +73,21 @@ export class UsersController {
       console.warn('Falha ao criar userSettings automáticas:', e?.message || e);
     }
 
-    const { password, ...rest } = created as any;
-    return rest;
+    // Enviar email de boas-vindas
+    try {
+      await this.emailService.sendWelcomeEmail(
+        created.email,
+        created.username,
+        tempPassword,
+        created.tokenVerificacaoEmail,
+      );
+      console.log(`📧 Email de boas-vindas enviado para ${created.email}`);
+    } catch (error) {
+      console.error(`❌ Erro ao enviar email de boas-vindas para ${created.email}:`, error);
+    }
+
+    const { password, tokenVerificacaoEmail, ...rest } = created as any;
+    return { ...rest, message: 'Usuário criado. Email de boas-vindas enviado.' };
   }
 
   @Get(':id')
@@ -93,66 +111,24 @@ export class UsersController {
     return rest;
   }
 
-  @Patch(':id')
+  @Patch('me/username')
   @UseGuards(JwtAuthGuard)
-  @ApiOperation({ summary: 'Atualizar usuário', description: 'Atualiza dados do usuário. O próprio usuário ou diretor. Somente diretor pode alterar role.' })
-  @ApiParam({ name: 'id', description: 'ID do usuário', example: 1 })
+  @ApiOperation({ summary: 'Atualizar próprio username', description: 'Permite que qualquer usuário autenticado altere apenas o próprio nome de usuário.' })
   @ApiBody({
     schema: {
       type: 'object',
+      required: ['username'],
       properties: {
-        username: { type: 'string', example: 'novo_nome' },
-        email: { type: 'string', example: 'novo@email.com' },
-        password: { type: 'string', example: 'novaSenha' },
-        role: { type: 'string', example: 'professor', description: 'Apenas diretor pode alterar' },
+        username: { type: 'string', example: 'novo_usuario' },
       },
     },
   })
-  @ApiResponse({ status: 200, description: 'Usuário atualizado com sucesso' })
-  @ApiResponse({ status: 400, description: 'Acesso negado' })
-  async update(@Param('id') idParam: string, @Body() body: any, @Req() req: any) {
-    const id = parseInt(idParam, 10);
-
-    if (req.user?.id !== id && req.user?.role !== 'diretor') {
-      throw new BadRequestException('Acesso negado');
-    }
-
-    delete body.id;
-    if (body.role && req.user.role !== 'diretor') {
-      delete body.role;
-    }
-
-    const updated = await this.usersService.updateById(id, body);
-    const { password, ...rest } = updated as any;
+  @ApiResponse({ status: 200, description: 'Username atualizado com sucesso' })
+  @ApiResponse({ status: 400, description: 'Username inválido ou já existente' })
+  async updateOwnUsername(@Body() body: { username: string }, @Req() req: any) {
+    const updated = await this.usersService.updateOwnUsername(req.user.id, body.username);
+    const { password, tokenVerificacaoEmail, tokenRecuperacao, validadeToken, ...rest } = updated as any;
     return rest;
-  }
-
-  @Post(':id/verify-password')
-  @UseGuards(JwtAuthGuard)
-  @ApiOperation({ summary: 'Verificar senha do usuário', description: 'Verifica se a senha informada é a senha atual do usuário. Útil antes de permitir alteração de senha.' })
-  @ApiParam({ name: 'id', description: 'ID do usuário', example: 1 })
-  @ApiBody({
-    schema: {
-      type: 'object',
-      required: ['password'],
-      properties: { password: { type: 'string', example: '123' } },
-    },
-  })
-  @ApiResponse({ status: 200, description: '{ ok: true } — senha correta' })
-  @ApiResponse({ status: 400, description: 'Senha inválida ou acesso negado' })
-  async verifyPassword(@Param('id') idParam: string, @Body() body: { password: string }, @Req() req: any) {
-    const id = parseInt(idParam, 10);
-
-    if (req.user?.id !== id && req.user?.role !== 'diretor') {
-      throw new BadRequestException('Acesso negado');
-    }
-
-    const ok = await this.usersService.verifyPassword(id, body.password || '');
-    if (!ok) {
-      throw new BadRequestException('Senha inválida');
-    }
-
-    return { ok: true };
   }
 
   @Delete(':id')

@@ -11,7 +11,7 @@ import { AssessmentQuestion } from './assessments/entities/assessment-question.e
 import { Student } from './students/entities/student.entity';
 import { Assessment } from './assessments/entities/assessment.entity';
 import { Placement } from './placements/entities/placement.entity';
-import * as readline from 'readline';
+// (readline removido — agora usa process.argv)
 
 // ====================== FUNÇÕES AUXILIARES PARA BULK ======================
 function calcularDigitos(cnpjBase: string): string {
@@ -77,6 +77,8 @@ async function seedData(dataSource: DataSource) {
     email: 'rodrigo.editado2@gmail.com',
     password: hashedPassword,
     role: 'diretor',
+    primeiroLogin: true,
+    emailVerificado: false, // email deve ser trocado.
   });
 
   const savedUser = await dataSource.getRepository(User).save(directorUser);
@@ -374,24 +376,30 @@ async function seedBulkPlacements(dataSource: DataSource, userId: number) {
   console.log('✅ +100 Encaminhamentos criados!');
 }
 
-// ====================== FUNÇÃO PARA PERGUNTAR NO TERMINAL ======================
-function perguntarOpcao(): Promise<number> {
-  const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout
-  });
+// ====================== FUNÇÃO PARA ESCOLHER OPÇÃO VIA CLI ======================
+function getOpcaoFromArgs(): number {
+  const args = process.argv.slice(2);
+  const isFull = args.includes('--full') || args.includes('-f');
+  const isBasic = args.includes('--basic') || args.includes('-b');
 
-  return new Promise((resolve) => {
-    console.log('\n📋 Escolha uma opção:\n');
-    console.log('  1 → Seed Básico (usuário, 5 empresas, permissões, questões)');
-    console.log('  2 → Seed Completo (Básico + 100 alunos, empresas, avaliações, encaminhamentos)\n');
-    
-    rl.question('Digite 1 ou 2: ', (answer) => {
-      rl.close();
-      const opcao = parseInt(answer);
-      resolve(opcao === 2 ? 2 : 1);
-    });
-  });
+  if (isFull) return 2;
+  if (isBasic) return 1;
+
+  // Se nenhum argumento, mostra ajuda e assume básico
+  if (args.length > 0 && (args.includes('--help') || args.includes('-h'))) {
+    console.log('Uso: npm run seed -- [opção]');
+    console.log('');
+    console.log('Opções:');
+    console.log('  --basic, -b    Seed básico (usuário, 5 empresas, permissões, questões)');
+    console.log('  --full, -f     Seed completo (Básico + 100 alunos, empresas, avaliações, encaminhamentos)');
+    console.log('');
+    console.log('Exemplos:');
+    console.log('  npm run seed -- --basic');
+    console.log('  npm run seed -- --full');
+    process.exit(0);
+  }
+
+  return 1; // default: básico
 }
 
 // ====================== FUNÇÃO PRINCIPAL ======================
@@ -414,8 +422,8 @@ async function seed() {
     console.log('📋 Sincronizando tabelas...');
     await dataSource.synchronize();
 
-    // Pergunta a opção usando readline
-    const opcao = await perguntarOpcao();
+    // Obtém a opção via argumentos de linha de comando
+    const opcao = getOpcaoFromArgs();
 
     if (opcao === 1) {
       await seedData(dataSource);

@@ -2,6 +2,7 @@ import { Injectable, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
+import * as crypto from 'crypto';
 import { User } from './entities/user.entity';
 
 @Injectable()
@@ -15,20 +16,24 @@ export class UsersService {
     return await this.userRepository.findOne({ where: { id } });
   }
 
-  async updateById(id: number, updateData: Partial<User>): Promise<User> {
+  async updateOwnUsername(id: number, username: string): Promise<User> {
+    const trimmedUsername = username?.trim();
+    if (!trimmedUsername) {
+      throw new BadRequestException('Nome de usuário é obrigatório');
+    }
+
     const user = await this.findById(id);
     if (!user) {
       throw new BadRequestException('Usuário não encontrado');
     }
 
-    // Se houver atualização de senha, realizar hash
-    if (updateData.password) {
-      const hashed = await bcrypt.hash(updateData.password, 10);
-      updateData.password = hashed;
+    const existingByUsername = await this.userRepository.findOne({ where: { username: trimmedUsername } });
+    if (existingByUsername && existingByUsername.id !== id) {
+      throw new BadRequestException('Nome de usuário já existe');
     }
 
-    const merged = this.userRepository.merge(user, updateData as any);
-    return await this.userRepository.save(merged);
+    user.username = trimmedUsername;
+    return await this.userRepository.save(user);
   }
 
 async create(userData: Partial<User>): Promise<User> {
@@ -50,9 +55,21 @@ async create(userData: Partial<User>): Promise<User> {
     userData.password = await bcrypt.hash('changeme', 10);
   }
 
-  const user: User = this.userRepository.create(userData as User); // ← tipagem explícita
-  const saved: User = await this.userRepository.save(user);        // ← tipagem explícita
+  // Marcar como primeiro login e não verificado
+  userData.primeiroLogin = true;
+  userData.emailVerificado = false;
+  userData.tokenVerificacaoEmail = crypto.randomBytes(32).toString('hex');
+
+  const user: User = this.userRepository.create(userData as User);
+  const saved: User = await this.userRepository.save(user);
   return saved;
+}
+
+/**
+ * Busca usuário por token de verificação de email
+ */
+async findByVerificationToken(token: string): Promise<User | null> {
+  return await this.userRepository.findOne({ where: { tokenVerificacaoEmail: token } });
 }
 
   async listAll(): Promise<Partial<User>[]> {
@@ -61,12 +78,6 @@ async create(userData: Partial<User>): Promise<User> {
       const { password, ...rest } = u;
       return rest;
     });
-  }
-
-  async verifyPassword(id: number, plainPassword: string): Promise<boolean> {
-    const user = await this.findById(id);
-    if (!user) return false;
-    return await bcrypt.compare(plainPassword, user.password);
   }
 
   async deleteById(id: number) {

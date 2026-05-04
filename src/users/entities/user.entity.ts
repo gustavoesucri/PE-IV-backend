@@ -23,6 +23,15 @@ export class User {
   @Column({ type: 'timestamp', nullable: true, name: 'validade_token' })
   validadeToken: Date;
 
+  @Column({ type: 'boolean', default: true, name: 'primeiro_login' })
+  primeiroLogin: boolean;
+
+  @Column({ type: 'boolean', default: false, name: 'email_verificado' })
+  emailVerificado: boolean;
+
+  @Column({ type: 'varchar', length: 255, nullable: true, name: 'token_verificacao_email' })
+  tokenVerificacaoEmail: string;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 

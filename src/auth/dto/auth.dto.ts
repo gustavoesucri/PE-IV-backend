@@ -50,6 +50,12 @@ export class UserResponseDto {
   @ApiProperty({ example: 'professor' })
   role: string;
 
+  @ApiProperty({ example: true })
+  primeiroLogin: boolean;
+
+  @ApiProperty({ example: false })
+  emailVerificado: boolean;
+
   @ApiProperty({ example: '2025-01-15T10:30:00.000Z' })
   createdAt: Date;
 
@@ -75,4 +81,24 @@ export class ResetPasswordDto {
   @IsNotEmpty({ message: 'Nova senha é obrigatória' })
   @MinLength(3, { message: 'Senha deve ter pelo menos 3 caracteres' })
   newPassword: string;
+}
+
+export class ChangePasswordFirstLoginDto {
+  @ApiProperty({ example: 'NovaSenha123!', description: 'Nova senha (mínimo 8 caracteres, maiúscula, minúscula, número e especial)' })
+  @IsString()
+  @IsNotEmpty({ message: 'Nova senha é obrigatória' })
+  @MinLength(8, { message: 'Senha deve ter pelo menos 8 caracteres' })
+  newPassword: string;
+
+  @ApiPropertyOptional({ example: 'novo@email.com', description: 'Novo email (opcional, para alteração no primeiro login)' })
+  @IsEmail({}, { message: 'Email inválido' })
+  @IsOptional()
+  newEmail?: string;
+}
+
+export class VerifyEmailDto {
+  @ApiProperty({ example: 'a1b2c3d4e5...', description: 'Token de verificação de email' })
+  @IsString()
+  @IsNotEmpty({ message: 'Token é obrigatório' })
+  token: string;
 }

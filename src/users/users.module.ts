@@ -5,9 +5,10 @@ import { UsersService } from './users.service';
 import { UsersController } from './users.controller';
 import { UserSettingsModule } from '../users-settings/user-settings.module';
 import { UserSettingsService } from '../users-settings/user-settings.service';
+import { EmailModule } from '../email/email.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User]), UserSettingsModule],
+  imports: [TypeOrmModule.forFeature([User]), UserSettingsModule, EmailModule],
   controllers: [UsersController],
   providers: [UsersService],
   exports: [UsersService],
