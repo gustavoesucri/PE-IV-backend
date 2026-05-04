@@ -22,15 +22,22 @@ export class UserSettingsController {
   constructor(private userSettingsService: UserSettingsService) {}
 
   @Get()
-  @ApiOperation({ summary: 'Buscar configurações por userId', description: 'Retorna as configurações do usuário (widgets, sidebar, notas, etc). Retorna array para compatibilidade com o frontend.' })
+  @ApiOperation({ summary: 'Buscar configurações por userId', description: 'Retorna as configurações do usuário (widgets, sidebar, notas, etc). Apenas o próprio usuário ou diretor. Retorna array para compatibilidade com o frontend.' })
   @ApiQuery({ name: 'userId', description: 'ID do usuário', example: '1', required: true })
   @ApiResponse({ status: 200, description: 'Array com configurações do usuário (ou array vazio)' })
-  async getByUserId(@Query('userId') userId: string) {
+  @ApiResponse({ status: 400, description: 'Acesso negado' })
+  async getByUserId(@Query('userId') userId: string, @Req() req: any) {
     if (!userId) {
       throw new BadRequestException('userId é obrigatório');
     }
 
     const userIdNum = parseInt(userId, 10);
+
+    // Verificar se é o próprio usuário ou diretor
+    if (req.user?.id !== userIdNum && req.user?.role !== 'diretor') {
+      throw new BadRequestException('Acesso negado');
+    }
+
     const settings = await this.userSettingsService.getByUserId(userIdNum);
 
     if (!settings) {
@@ -41,7 +48,7 @@ export class UserSettingsController {
   }
 
   @Post()
-  @ApiOperation({ summary: 'Criar configurações de usuário', description: 'Cria as configurações padrão para um novo usuário. Chamado automaticamente após criação do usuário.' })
+  @ApiOperation({ summary: 'Criar configurações de usuário', description: 'Cria as configurações padrão para um novo usuário. Apenas o próprio usuário ou diretor.' })
   @ApiBody({
     schema: {
       type: 'object',
@@ -50,10 +57,15 @@ export class UserSettingsController {
     },
   })
   @ApiResponse({ status: 201, description: 'Configurações criadas com sucesso' })
-  @ApiResponse({ status: 400, description: 'userId é obrigatório' })
-  async create(@Body() body: any) {
+  @ApiResponse({ status: 400, description: 'Acesso negado ou userId é obrigatório' })
+  async create(@Body() body: any, @Req() req: any) {
     if (!body.userId) {
       throw new BadRequestException('userId é obrigatório');
+    }
+
+    // Verificar se é o próprio usuário ou diretor
+    if (req.user?.id !== body.userId && req.user?.role !== 'diretor') {
+      throw new BadRequestException('Acesso negado');
     }
 
     console.log('📝 Criando userSettings para userId:', body.userId);

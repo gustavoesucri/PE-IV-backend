@@ -46,8 +46,10 @@ export class AssessmentsController {
   }
 
   @Get('questions')
-  @ApiOperation({ summary: 'Listar questões da avaliação', description: 'Retorna as 49 questões (46 múltipla escolha + 3 abertas) cadastradas no banco. Não requer permissão especial, apenas autenticação JWT.' })
+  @Permissions('view_assessments')
+  @ApiOperation({ summary: 'Listar questões da avaliação', description: 'Retorna as 49 questões (46 múltipla escolha + 3 abertas) cadastradas no banco. Requer permissão `view_assessments`.' })
   @ApiResponse({ status: 200, description: 'Lista de questões com opções, condições e ordem' })
+  @ApiResponse({ status: 403, description: 'Sem permissão view_assessments' })
   findAllQuestions() {
     return this.assessmentsService.findAllQuestions();
   }
