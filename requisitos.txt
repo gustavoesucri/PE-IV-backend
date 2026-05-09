@@ -4,8 +4,6 @@ students.service.ts:
 
     - O conflito 409 "Nome de estudante já cadastrado" não deve existir, pois no mundo existem homônimos. O CPF resolverá este conflito.
     - Permite salvar nomes com mais de uma letra capital. Exemplos: "Maria da SIlva" ou "MAria da Silva". Dúvida sobre necessidade de normalizar isso via backend.
-    
-    - "Cidade" e "Complemento" ausentes da Entity da API e ausentes no front-end.
 
 assesments:
 

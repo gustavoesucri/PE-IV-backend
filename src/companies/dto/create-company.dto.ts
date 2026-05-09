@@ -23,6 +23,11 @@ export class CreateCompanyDto {
   @IsOptional()
   numero?: string;
 
+  @ApiPropertyOptional({ example: 'Apto 101, Bloco A' })
+  @IsString()
+  @IsOptional()
+  complemento?: string;
+
   @ApiPropertyOptional({ example: 'Centro' })
   @IsString()
   @IsOptional()
@@ -32,11 +37,6 @@ export class CreateCompanyDto {
   @IsString()
   @IsOptional()
   cidade?: string;
-
-  @ApiPropertyOptional({ example: 'Apto 101, Bloco A' })
-  @IsString()
-  @IsOptional()
-  complemento?: string;
 
   @ApiPropertyOptional({ example: 'SP', description: '2 letras maiúsculas (UF)' })
   @IsString()
