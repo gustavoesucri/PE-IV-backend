@@ -74,11 +74,11 @@ async function seedData(dataSource: DataSource) {
 
   const directorUser = dataSource.getRepository(User).create({
     username: 'Diretor',
-    email: 'rodrigo.editado2@gmail.com',
+    email: 'use.este.email.mesmo@example.com',
     password: hashedPassword,
     role: 'diretor',
     primeiroLogin: true,
-    emailVerificado: false, // email deve ser trocado.
+    emailVerificado: true,
   });
 
   const savedUser = await dataSource.getRepository(User).save(directorUser);

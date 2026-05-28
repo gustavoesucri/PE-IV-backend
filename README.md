@@ -1,31 +1,37 @@
-# PE-IV-backend
-Back-end do Projeto de Extensão IV
+# PE-IV - Como Executar
 
-### Instruções para rodar o projeto:
+## Backend
 
-- Em um terminal, rodar 'npm run start' no projeto /PE-IV-backend .
+```bash
+cd PE-IV-backend
+npm install
+npm run seed:full        # popula o banco com dados básicos
+npm run start       # inicia o servidor
+```
 
-- (Se quiser front-end) Em outro, rodar 'npm run start' na pasta do projeto /PE-IV-frontend .
+## Frontend
 
-- No login utilizar: usuário: 'Diretor' e senha 'admin'.
+```bash
+cd PE-IV-frontend
+npm install
+npm run start       # inicia o cliente
+```
 
-- Armazenar o token para uso.
+## Login
 
-- O back-end possui seed. Rodar usando "npm run seed".
+**Usuário:** Diretor  
+**Senha:** admin
 
-- Também foram criados 4 arquivos JavaScript que também alimentam o backend e no futuro irão incorporar o seed. Eles têm o prefixo "envia_". 
+Será solicitado o seu e-mail (foi modificado para NÃO precisar alterar o que estiver ali) e uma nova senha, aconselha-se uma senha raṕida e prática: 
 
-    Ordem de execução dos scripts:
+    Qwert12345!
 
-        - envia_100_alunos.js
-        - envia_100_CNPJs.js
-        - envia_100.encaminhamentos.js
-        - envia_100.avaliacoes.js (não são 100, são menos)
+Isso provavelmente gerará um alerta, clique para permanecer na página e já terá o acesso. Para logar novamente utilize a senha que você colocou.
 
-    Antes de executá-los, substitua o token recebido no login na variável "TOKEN", no início de cada um dos arquivos.
+---
 
-    Para executar eles, chame cada um deles num terminal separado do que está rodando o back-end e execute:
-    
-        node [nome_do_arquivo]
+OBS: Não mais será enviado um e-mail. No momento, um e-mail só seria enviado se usar o .env do outro desenvolvedor. Contudo, ainda assim foi modificado para que isso não gerasse um atrito extra, então, no máximo será um e-mail avisando que o e-mail foi modificado, caso o .env dele (completo com SMTP) seja utilizado.
 
-    A ordem é necessária por causa das FKs.
+
+
+
