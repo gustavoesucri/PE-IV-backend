@@ -1,11 +1,16 @@
 # PE-IV - Como Executar
 
+## Configuração
+
+1. Copie `.env.example` para `.env`
+2. Configure as variáveis conforme necessário
+
 ## Backend
 
 ```bash
 cd PE-IV-backend
 npm install
-npm run seed:full        # popula o banco com dados básicos
+npm run seed        # popula o banco com dados
 npm run start       # inicia o servidor
 ```
 
@@ -22,7 +27,7 @@ npm run start       # inicia o cliente
 **Usuário:** Diretor  
 **Senha:** admin
 
-Será solicitado o seu e-mail (foi modificado para NÃO precisar alterar o que estiver ali) e uma nova senha, aconselha-se uma senha raṕida e prática: 
+Será solicitado o seu e-mail (foi modificado para NÃO precisar alterar o que estiver ali) e uma nova senha, aconselha-se uma senha rápida e prática: 
 
     Qwert12345!
 
