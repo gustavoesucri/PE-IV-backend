@@ -1,5 +1,11 @@
 # PE-IV - Como Executar
 
+## Pré-requisitos
+
+- Node.js 16+
+- PostgreSQL rodando
+- npm ou yarn
+
 ## Configuração
 
 1. Copie `.env.example` para `.env`
@@ -10,6 +16,7 @@
 ```bash
 cd PE-IV-backend
 npm install
+createdb idf-pev    # cria o banco de dados (idf-pev é o nome do BD sugerido no .env.example, altere se necessário)
 npm run seed        # popula o banco com dados
 npm run start       # inicia o servidor
 ```
